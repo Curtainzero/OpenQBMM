@@ -28,11 +28,9 @@ License
 
 \*---------------------------------------------------------------------------*/
 
-#include "Miller.H"
+#include "classicNu.H"
 #include "addToRunTimeSelectionTable.H"
 #include "fundamentalConstants.H"
-
-// * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
 namespace Foam
 {
@@ -40,83 +38,53 @@ namespace populationBalanceSubModels
 {
 namespace nucleationModels
 {
-    defineTypeNameAndDebug(Miller, 0);
 
-    addToRunTimeSelectionTable
-    (
-        nucleationModel,
-        Miller,
-        dictionary
-    );
+defineTypeNameAndDebug(classicNu, 1);
+
+addToRunTimeSelectionTable
+(
+    nucleationModel,
+    classicNu,
+    dictionary
+);
+
+
+
 }
 }
 }
 
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
-
-Foam::populationBalanceSubModels::nucleationModels::Miller::Miller
+Foam::populationBalanceSubModels::nucleationModels::classicNu::classicNu
 (
     const dictionary& dict,
     const fvMesh& mesh
-)
-:
+):
     nucleationModel(dict, mesh),
-    continuousPhase_(dict.lookupOrDefault("continuousPhase", word::null)),
-    MCarbon_("MCarbon", dimMass/dimMoles, dict),
-    nCarbonDimer_("nCarbonDimer", dimless, dict),
-    nCarbonPAM_("nCarbonPAM", dimless, dict),
-    rhoSoot_("rhoSoot", dimDensity, dict),
-    pamConcentration_ (
-        IOobject
-        (
-            "YPAM",
-            mesh_.time().timeName(),
-            mesh_,
-            IOobject::MUST_READ,
-            IOobject::AUTO_WRITE
-        ),
-        mesh
-    ),
-    T_ (
-        dict.found("T")
-      ? mesh.lookupObject<volScalarField>(dict.get<word>("T"))
-      : mesh.lookupObject<volScalarField>
-        (
-            IOobject::groupName("T", continuousPhase_)
-        )
-    )
+    A_("parameterA",inv(dimVolume*dimTime),dict),
+    B_("parameterB",dimless,dict),
+    SuperS_(mesh.lookupObject<volScalarField>("SuperS")),
+    dcdt_(mesh.lookupObject<volScalarField>("dcdt"))
 {}
 
-
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
-
-Foam::populationBalanceSubModels::nucleationModels::Miller::~Miller()
+Foam::populationBalanceSubModels::nucleationModels::classicNu::~classicNu()
 {}
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
-
-Foam::scalar
-Foam::populationBalanceSubModels::nucleationModels::Miller::nucleationSource
+Foam::scalar 
+Foam::populationBalanceSubModels::nucleationModels::classicNu::nucleationSource
 (
     const label& momentOrder,
     const label celli,
     const label environment
-) const
-{
-    scalar NA = Foam::constant::physicoChemical::NA.value();
-    scalar MCarbon = MCarbon_.value();
-
-    scalar abscissaNucleation =
-        2.0*MCarbon*nCarbonDimer_.value()/(rhoSoot_.value()*NA);
-
-    return 4.4*sqrt(Foam::constant::mathematical::pi
-        *Foam::constant::physicoChemical::k.value()*T_[celli]*NA
-        /nCarbonPAM_.value()*MCarbon)*pow(6.0*nCarbonPAM_.value()*MCarbon
-        /(Foam::constant::mathematical::pi*rhoSoot_.value()
-        *NA), 2.0/3.0)*NA*sqr(pamConcentration_[celli])
-        *pow(abscissaNucleation, momentOrder);
+) const {
+    Foam::dimensionedScalar tmp = Foam::exp(-1*(B_/Foam::sqr(Foam::log(SuperS_[celli]+SMALL))));
+    Foam::scalar result = (A_*SuperS_[celli]*tmp).value();
+    return (
+        pow(result,momentOrder)
+    );
 }
 
-// ************************************************************************* //
