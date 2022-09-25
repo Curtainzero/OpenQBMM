@@ -114,9 +114,10 @@ Foam::populationBalanceSubModels::growthModels::classicGrowth::Kg_new
     const bool lengthBased,
     const label environment
 ) {
-    Foam::scalar tmp = (dcdt_[celli]*moleDensity_.value()-(mesh_.V()[celli]*(nucleationModel_->nucleationSource(1, celli))*particleRho_*3.1415926/6).value());
-    Foam::scalar result = (tmp/(3*3.1415926/6*particleRho_*totalN_[celli])).value();
-    return result*pos0(-abscissa + maxAbscissa_)*pos0(abscissa - minAbscissa_); 
+    Foam::scalar kv(3.141592653/6);
+    Foam::scalar tmp = pos0((dcdt_[celli]*moleDensity_/particleRho_).value()-(mesh_.V()[celli]*(nucleationModel_->nucleationSource(1, celli))*kv));
+    Foam::scalar result = (tmp/(3*kv*totalN_[celli]));
+    return result; 
 }
 
 
