@@ -1,6 +1,8 @@
 {
     "files.associations": {
         "univariatePopulationBalance.C": "cpp",
-        "classicGrowth.C": "cpp"
+        "classicGrowth.C": "cpp",
+        "classicGrowth.H": "cpp",
+        "classicNu.C": "cpp"
     }
 }

@@ -88,6 +88,7 @@ private:
 
         //- total number of particles in cell 
         //- need to be defined previously
+        //- celli中颗粒总数量
         const volScalarField& totalN_;
 
         //- Nucleation model

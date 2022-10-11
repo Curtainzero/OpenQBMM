@@ -71,7 +71,7 @@ Foam::populationBalanceSubModels::growthModels::classicGrowth
     minAbscissa_(dict.lookupOrDefault("minAbscissa", scalar(0))),
     maxAbscissa_(dict.lookupOrDefault("maxAbscissa", GREAT)),
     dcdt_(mesh.lookupObject<volScalarField>("dcdt")),
-    totalN_(mesh.lookupObject<volScalarField>("moment.0.populationBalance"))
+    totalN_(mesh.lookupObject<volScalarField>("moment.0.populationBalance")) //- 颗粒总数量为 积分n(L)dL, 对应0阶Moment
 {
     nucleationModel_ =
             Foam::populationBalanceSubModels::nucleationModel::New
@@ -91,7 +91,7 @@ Foam::populationBalanceSubModels::growthModels::classicGrowth
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-// not used
+// Old Kg, not used 
 Foam::scalar
 Foam::populationBalanceSubModels::growthModels::classicGrowth::Kg
 (
@@ -114,14 +114,18 @@ Foam::populationBalanceSubModels::growthModels::classicGrowth::Kg_new
     const bool lengthBased,
     const label environment
 ) {
-    Foam::scalar kv(3.141592653/6);
-    Foam::scalar tmp = pos0((dcdt_[celli]*moleDensity_/particleRho_).value()-(mesh_.V()[celli]*(nucleationModel_->nucleationSource(1, celli))*kv));
+    Foam::scalar kv(3.141592653/6); //- 体积常数
+    Foam::scalar tmp = pos0(
+                            (dcdt_[celli]*moleDensity_/particleRho_).value()
+                            -(mesh_.V()[celli]*(nucleationModel_->nucleationSource(1, celli))*kv)
+                            );
+    //<dcdt>-<J> 使用nucleationSource一阶Moment对应 J^1        
     Foam::scalar result = (tmp/(3*kv*totalN_[celli]));
     return result; 
 }
 
 
-//覆盖掉父类中phaseSpaceConvection
+//覆盖掉父类中phaseSpaceConvection, 使用Kg_new, 其余无修改可忽略
 Foam::scalar
 Foam::populationBalanceSubModels::growthModels::classicGrowth::phaseSpaceConvection
 (
