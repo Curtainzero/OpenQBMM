@@ -196,12 +196,7 @@ Foam::PDFTransportModels::populationBalanceModels::univariatePopulationBalance
 
     if (nucleation_)
     {
-        source += 
-            nucleationModel_->nucleationSource
-            (
-                momentOrder[0], 
-                celli
-            );
+        source += nucleationModel_->nucleationSource(momentOrder[0], celli);
     }
 
     return source;

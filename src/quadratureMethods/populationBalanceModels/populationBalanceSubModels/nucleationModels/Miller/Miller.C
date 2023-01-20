@@ -67,7 +67,8 @@ Foam::populationBalanceSubModels::nucleationModels::Miller::Miller
     nCarbonDimer_("nCarbonDimer", dimless, dict),
     nCarbonPAM_("nCarbonPAM", dimless, dict),
     rhoSoot_("rhoSoot", dimDensity, dict),
-    pamConcentration_ (
+    pamConcentration_
+    (
         IOobject
         (
             "YPAM",
@@ -78,7 +79,8 @@ Foam::populationBalanceSubModels::nucleationModels::Miller::Miller
         ),
         mesh
     ),
-    T_ (
+    T_
+    (
         dict.found("T")
       ? mesh.lookupObject<volScalarField>(dict.get<word>("T"))
       : mesh.lookupObject<volScalarField>
@@ -113,9 +115,12 @@ Foam::populationBalanceSubModels::nucleationModels::Miller::nucleationSource
 
     return 4.4*sqrt(Foam::constant::mathematical::pi
         *Foam::constant::physicoChemical::k.value()*T_[celli]*NA
-        /nCarbonPAM_.value()*MCarbon)*pow(6.0*nCarbonPAM_.value()*MCarbon
+        /nCarbonPAM_.value()*MCarbon)
+        *pow(6.0*nCarbonPAM_.value()*MCarbon
         /(Foam::constant::mathematical::pi*rhoSoot_.value()
-        *NA), 2.0/3.0)*NA*sqr(pamConcentration_[celli])
+        *NA), 2.0/3.0)
+        *NA
+        *sqr(pamConcentration_[celli])
         *pow(abscissaNucleation, momentOrder);
 }
 

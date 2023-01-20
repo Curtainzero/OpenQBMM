@@ -63,22 +63,17 @@ private:
 
     // Private data
 
-        //- Supersaturation field
-        //- need to be defined previously
-        const volScalarField& SuperS_;
-
-        //- Concentration change in solution
-        //- need to be defined previously
-        //- 需要检测nucleation的值是否大于dcdt，大于的话是非法的
-        const volScalarField& dcdt_;
-
         //- Parameter A in classical nucleation formula
         dimensionedScalar A_;
 
         //- Parameter B in classical nucleation formula
         dimensionedScalar B_;
 
-    
+        //- 分子摩尔质量
+        dimensionedScalar moleDensity_;
+
+        //- 密度
+        dimensionedScalar particleRho_;
 
 
 

@@ -47,9 +47,6 @@ addToRunTimeSelectionTable
     classicNu,
     dictionary
 );
-
-
-
 }
 }
 }
@@ -64,9 +61,12 @@ Foam::populationBalanceSubModels::nucleationModels::classicNu::classicNu
     nucleationModel(dict, mesh),
     A_("parameterA",inv(dimVolume*dimTime),dict),
     B_("parameterB",dimless,dict),
-    SuperS_(mesh.lookupObject<volScalarField>("SuperS")),
-    dcdt_(mesh.lookupObject<volScalarField>("dcdt"))
-{}
+    moleDensity_("moleDensity",dimMass*inv(dimMoles),dict),
+    particleRho_("rho",inv(dimVolume)*dimMass,dict)
+{
+    Info << A_ <<endl;
+    Info << B_ <<endl;
+}
 
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
 Foam::populationBalanceSubModels::nucleationModels::classicNu::~classicNu()
@@ -81,10 +81,30 @@ Foam::populationBalanceSubModels::nucleationModels::classicNu::nucleationSource
     const label celli,
     const label environment
 ) const {
-    Foam::dimensionedScalar tmp = Foam::exp(-1*(B_/Foam::sqr(Foam::log(SuperS_[celli]+SMALL))));
-    Foam::scalar result = (A_*SuperS_[celli]*tmp).value();
+    const volScalarField& totalN_ = mesh_.lookupObject<volScalarField>("moment.0.populationBalance");
+    const volScalarField& SuperS_ = mesh_.lookupObject<volScalarField>("SuperS");
+    const volScalarField& dcdt_ = mesh_.lookupObject<volScalarField>("dcdt");
+    //Info << SuperS_[celli] <<endl;
+    scalar A = A_.value();
+    scalar B = B_.value();
+    Foam::scalar tmp = exp(-1*(B/sqr(log(SuperS_[celli]+1e-10))));
+    Foam::scalar result = A*SuperS_[celli]*tmp;
+    //Info << result <<endl;
+    scalar minSize = 5e-9;
+
+    scalar kv(Foam::constant::mathematical::pi/6);
+
+    if (((dcdt_[celli]*moleDensity_/particleRho_).value()-mesh_.V()[celli]*result*kv*pow(minSize,3)) <0) {
+        result = (dcdt_[celli]*moleDensity_/particleRho_).value() / (mesh_.V()[celli]*kv*pow(minSize,3));
+    }
+
+    //if (totalN_[celli]> 100) {
+        //result = 0.0;
+    //}
+
+
     return (
-        pow(result,momentOrder)
+        result*pow(minSize, momentOrder)
     );
 }
 

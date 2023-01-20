@@ -1,13 +1,9 @@
 {
     "files.associations": {
-        "populationBalanceModel.C": "cpp",
+        "classicNu.C": "cpp",
+        "classicNu.H": "cpp",
         "classicGrowth.C": "cpp",
         "constantGrowth.C": "cpp",
-        "constantGrowth.H": "cpp",
-        "growthModel.C": "cpp",
-        "classicNu.H": "cpp",
-        "classicNu.C": "cpp",
-        "univariatePopulationBalance.C": "cpp",
-        "univariatePopulationBalance.H": "cpp"
+        "linearEvaporation.C": "cpp"
     }
 }

@@ -68,10 +68,8 @@ Foam::populationBalanceSubModels::growthModels::classicGrowth
     growthModel(dict, mesh),
     moleDensity_("moleDensity",dimMass*inv(dimMoles),dict),
     particleRho_("rho",inv(dimVolume)*dimMass,dict),
-    minAbscissa_(dict.lookupOrDefault("minAbscissa", scalar(0))),
-    maxAbscissa_(dict.lookupOrDefault("maxAbscissa", GREAT)),
-    dcdt_(mesh.lookupObject<volScalarField>("dcdt")),
-    totalN_(mesh.lookupObject<volScalarField>("moment.0.populationBalance")) //- 颗粒总数量为 积分n(L)dL, 对应0阶Moment
+    minAbscissa_(dict.lookupOrDefault("minAbscissa", 5e-10)),
+    maxAbscissa_(dict.lookupOrDefault("maxAbscissa", GREAT))
 {
     nucleationModel_ =
             Foam::populationBalanceSubModels::nucleationModel::New
@@ -114,14 +112,26 @@ Foam::populationBalanceSubModels::growthModels::classicGrowth::Kg_new
     const bool lengthBased,
     const label environment
 ) {
-    Foam::scalar kv(3.141592653/6); //- 体积常数
-    Foam::scalar tmp = pos0(
+    const volScalarField& totalN_ = mesh_.lookupObject<volScalarField>("moment.0.populationBalance");
+    const volScalarField& totalN2_ = mesh_.lookupObject<volScalarField>("moment.2.populationBalance");
+    const volScalarField& SuperS_ = mesh_.lookupObject<volScalarField>("SuperS");
+    const volScalarField& dcdt_ = mesh_.lookupObject<volScalarField>("dcdt");
+    Foam::scalar kv(Foam::constant::mathematical::pi/6); //- 体积常数
+    Foam::scalar tmp = posPart(
                             (dcdt_[celli]*moleDensity_/particleRho_).value()
-                            -(mesh_.V()[celli]*(nucleationModel_->nucleationSource(1, celli))*kv)
+                            -(mesh_.V()[celli]*(nucleationModel_->nucleationSource(3, celli))*kv)
                             );
-    //<dcdt>-<J> 使用nucleationSource一阶Moment对应 J^1        
-    Foam::scalar result = (tmp/(3*kv*totalN_[celli]));
-    return result; 
+    if (totalN_[celli]<10) {
+        return 0.0;
+    } else {
+        //Info << "ucleationSource: " << nucleationModel_->nucleationSource(0, celli) << endl;
+        //Info << "totalN_[celli]: " << totalN_[celli] << endl;
+        //Info << "tmp: " << tmp << endl;
+        //Info << "coef: " << 3*kv*totalN2_[celli]+25e-18 << endl;
+        Foam::scalar result = (tmp/(3*kv*totalN2_[celli]+25e-17));
+        //Info << "G: " << result << endl;
+        return result;;
+    }
 }
 
 

@@ -82,15 +82,6 @@ private:
         //- 密度
         dimensionedScalar particleRho_;
 
-        //- Concentration change in solution
-        //- need to be defined previously
-        const volScalarField& dcdt_;
-
-        //- total number of particles in cell 
-        //- need to be defined previously
-        //- celli中颗粒总数量
-        const volScalarField& totalN_;
-
         //- Nucleation model
         autoPtr
         <
